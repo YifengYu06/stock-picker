@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>周线爆发选股</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    background: #0a0e27;
+    color: #e0e6ff;
+    min-height: 100vh;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+.header {
+    background: linear-gradient(135deg, #1a1f4e 0%, #0d1234 100%);
+    padding: 20px 16px 16px;
+    border-bottom: 1px solid rgba(100, 120, 255, 0.15);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(20px);
+}
+.header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    background: linear-gradient(90deg, #6c8cff, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 1px;
+}
+.header .meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #7a85b3;
+}
+.header .count {
+    background: rgba(100, 120, 255, 0.15);
+    color: #8fa4ff;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+.strategy-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(167, 139, 250, 0.12);
+    color: #a78bfa;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    margin-top: 10px;
+}
+.strategy-tag::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: #a78bfa;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+.stock-list { padding: 12px; }
+.stock-card {
+    background: linear-gradient(135deg, rgba(26, 31, 78, 0.8) 0%, rgba(13, 18, 52, 0.9) 100%);
+    border: 1px solid rgba(100, 120, 255, 0.1);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+.stock-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(100, 120, 255, 0.3), transparent);
+}
+.stock-card:active {
+    transform: scale(0.98);
+    border-color: rgba(100, 120, 255, 0.3);
+}
+.card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+.stock-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: #e8ecff;
+}
+.stock-code {
+    font-size: 12px;
+    color: #5a6599;
+    margin-top: 2px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+}
+.stock-price {
+    text-align: right;
+}
+.price-value {
+    font-size: 22px;
+    font-weight: 700;
+    font-family: 'SF Mono', 'DIN Alternate', monospace;
+}
+.price-change {
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 2px;
+}
+.up { color: #f43f5e; }
+.down { color: #10b981; }
+.flat { color: #7a85b3; }
+.card-bottom {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(100, 120, 255, 0.08);
+}
+.metric {
+    text-align: center;
+}
+.metric-label {
+    font-size: 10px;
+    color: #5a6599;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.metric-value {
+    font-size: 13px;
+    color: #b0badf;
+    margin-top: 2px;
+    font-family: 'SF Mono', monospace;
+}
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #5a6599;
+}
+.empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+.empty-state p { font-size: 14px; line-height: 1.6; }
+.footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 11px;
+    color: #3d4570;
+    border-top: 1px solid rgba(100, 120, 255, 0.06);
+    margin-top: 10px;
+}
+.footer a { color: #5a6599; text-decoration: none; }
+.disclaimer {
+    background: rgba(234, 179, 8, 0.06);
+    border: 1px solid rgba(234, 179, 8, 0.15);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin: 12px;
+    font-size: 11px;
+    color: #b8a44a;
+    line-height: 1.5;
+}
+</style>
+</head>
+<body>
+<div class="header">
+    <h1>周线爆发选股</h1>
+    <div class="meta">
+        <span>2026年03月09日 11:38 更新</span>
+        <span class="count">2 只</span>
+    </div>
+    <div class="strategy-tag">BOLL扩张 + 放量 + MACD零上金叉</div>
+</div>
+
+<div class="disclaimer">
+    本页面仅为量化策略筛选结果展示，不构成任何投资建议。股市有风险，投资需谨慎。
+</div>
+
+<div class="stock-list">
+
+
+<div class="stock-card">
+    <div class="card-top">
+        <div>
+            <div class="stock-name">平安银行</div>
+            <div class="stock-code">000001</div>
+        </div>
+        <div class="stock-price">
+            
+            <div class="price-value up">
+                12.35
+            </div>
+            <div class="price-change up">
+                +2.15%
+            </div>
+            
+        </div>
+    </div>
+    
+    <div class="card-bottom">
+        <div class="metric">
+            <div class="metric-label">开盘</div>
+            <div class="metric-value">12.10</div>
+        </div>
+        <div class="metric">
+            <div class="metric-label">最高</div>
+            <div class="metric-value">12.50</div>
+        </div>
+        <div class="metric">
+            <div class="metric-label">最低</div>
+            <div class="metric-value">12.00</div>
+        </div>
+    </div>
+    
+</div>
+
+<div class="stock-card">
+    <div class="card-top">
+        <div>
+            <div class="stock-name">贵州茅台</div>
+            <div class="stock-code">600519</div>
+        </div>
+        <div class="stock-price">
+            
+            <div class="price-value down">
+                1680.00
+            </div>
+            <div class="price-change down">
+                -0.53%
+            </div>
+            
+        </div>
+    </div>
+    
+    <div class="card-bottom">
+        <div class="metric">
+            <div class="metric-label">开盘</div>
+            <div class="metric-value">1690.00</div>
+        </div>
+        <div class="metric">
+            <div class="metric-label">最高</div>
+            <div class="metric-value">1695.00</div>
+        </div>
+        <div class="metric">
+            <div class="metric-label">最低</div>
+            <div class="metric-value">1675.00</div>
+        </div>
+    </div>
+    
+</div>
+
+
+</div>
+
+<div class="footer">
+    <p>策略自动运行 · 数据来源: 东方财富</p>
+    <p style="margin-top:4px;">周线级别 · 每周五收盘后更新</p>
+</div>
+</body>
+</html>
