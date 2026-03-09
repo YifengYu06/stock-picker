@@ -456,7 +456,7 @@ body {
 
 <div class="footer">
     <p>策略自动运行 · 数据来源: 东方财富</p>
-    <p style="margin-top:4px;">周线级别 · 每周五收盘后更新</p>
+    <p style="margin-top:4px;">周线级别 · 每个交易日收盘后自动更新</p>
 </div>
 </body>
 </html>"""
